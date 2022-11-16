@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+# Important: this script MUST be inside a git working directory (not inside .git).
+if git rev-parse --show-toplevel 2>/dev/null 1>/dev/null; then
+  WORKTREE_DIR="$(git rev-parse --show-toplevel)"
+else
+  echo 1>&2 "ERROR: Not inside a git controlled area"
+  exit 1
+fi
+cd "${WORKTREE_DIR}" || exit
+source bin/Essential-IO
+source setup.profile
+_do cmake -S . -B build/debug -D"CMAKE_PREFIX_PATH=${WORKTREE_DIR}" -D"CMAKE_BUILD_TYPE=Debug"
+_do cmake --build build/debug
+_do ctest --test-dir build/debug -V
