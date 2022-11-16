@@ -30,3 +30,7 @@
 *.exe
 *.out
 *.app
+
+# OS oddities
+.DS_Store
+thumbs.db
