@@ -2,7 +2,7 @@
 #
 # This works with SystemC versions 2.3.2 and later, which have support for
 # cmake and specify SystemC_CXX_STANDARD.
-# 
+#
 # REQUIREMENTS:
 # - Adjust ../../setup.profile if needed
 
@@ -19,12 +19,17 @@ find_package( Boost REQUIRED )
 set_target( "${PROJECT_NAME}" )
 add_executable( "${Target}" )
 # Adjust following as needed (e.g., add NOBOOST and/or NOUTF8)
-target_compile_definitions( "${Target}" PRIVATE
-  SC_HAS_ANALYSIS_BASE
-  SC_HAS_GET_BASE_INTERFACE
+target_compile_definitions( "${Target}"
+  PRIVATE
   SC_ENABLE_COVARIANT_VIRTUAL_BASE
 )
-target_include_directories( "${Target}" PRIVATE src tests "${WORKTREE_DIR}/include" "${Boost_INCLUDE_DIRS}")
+target_include_directories( "${Target}"
+  PRIVATE
+  "${WORKTREE_DIR}/include"
+  "${Boost_INCLUDE_DIRS}"
+  src
+  tests
+)
 target_link_libraries( "${Target}" PRIVATE "${Boost_LIBRARIES}")
 target_sources( "${Target}"
   PUBLIC
@@ -35,6 +40,7 @@ target_sources( "${Target}"
   tests/stimulus.cpp
   tests/bus.hpp
   tests/bus.cpp
+  tests/operation.h
   tests/response.h
   tests/response.cpp
   tests/top.h
