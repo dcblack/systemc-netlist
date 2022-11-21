@@ -4,7 +4,7 @@
 
 // Registered data clears and accumulates synchronous to the clock.
 // add and clear inputs must be valid tSETUP before and held tHOLD after the positive clock edge.
-// The result is valid asynchronously with the enable.
+// The result is valid asynchronously with the enable input.
 //        ____________________________________________         __________ 
 // enable                                             \_______/           
 //           :      :       :       :       :         :       :     :     
@@ -22,16 +22,16 @@ template<size_t W>
 SC_MODULE( Accumulator_module ) {
   using Data = sc_core::sc_signal<sc_dt::sc_int<W>>;
   // Ports
-  sc_in<Data>  datain_port { "datain_port" };
-  sc_in<bool>  add_port    { "add_port"    };
-  sc_in<bool>  clear_port  { "clear_port"  };
-  sc_out<Data> enable_port { "enable_port" };
-  sc_out<Data> result_port { "result_port" };
-  sc_in<bool>  clock_port  { "clock_port"  };
+  sc_core::sc_in<Data>  datain_port { "datain_port" };
+  sc_core::sc_in<bool>  add_port    { "add_port"    };
+  sc_core::sc_in<bool>  clear_port  { "clear_port"  };
+  sc_core::sc_out<Data> enable_port { "enable_port" };
+  sc_core::sc_out<Data> result_port { "result_port" };
+  sc_core::sc_in<bool>  clock_port  { "clock_port"  };
   // Constructor
   SC_CTOR( Accumulator_module ) {
     SC_METHOD( adding_method );
-      sensitive << clock.pos();
+      sensitive << clock_port.pos();
     SC_METHOD( output_method );
       sensitive << enable_port;
   }
