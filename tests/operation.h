@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <string>
+#include <stdexcept>
 using namespace std::literals;
 
 template<typename T=int>
