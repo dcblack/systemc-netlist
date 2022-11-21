@@ -10,6 +10,7 @@ fi
 cd "${WORKTREE_DIR}" || exit
 source bin/Essential-IO
 source setup.profile
-_do cmake -S . -B build/debug -D"CMAKE_PREFIX_PATH=${WORKTREE_DIR}" -D"CMAKE_BUILD_TYPE=Debug"
-_do cmake --build build/debug
+echo "SYSTEMC_HOME=${SYSTEMC_HOME}"
+_do cmake -S . -B build/debug -D"CMAKE_PREFIX_PATH=${WORKTREE_DIR}" -D"CMAKE_BUILD_TYPE=Debug" || exit 1
+_do cmake --build build/debug || exit 1
 _do ctest --test-dir build/debug -V

@@ -50,6 +50,7 @@ EOF
 declare -a ARGV
 export APPS
 export ARGV
+export BUILD_SOURCE_DOCUMENTATION
 export CC
 export CLEAN
 export CLEANUP
@@ -69,8 +70,10 @@ export SUFFIX
 export TOOL_NAME
 # shellcheck disable=SC2090
 export TOOL_INFO
+export TOOL_SRC
 export TOOL_VERS
 export TOOL_URL
+export TOOL_PATCHES
 export BUILD_DIR
 export GENERATOR
 export NOINSTALL
@@ -89,6 +92,8 @@ if [[ ! -d "${SCRIPTDIR}" ]]; then
 fi
 # shellcheck disable=SC2250,SC1091
 source "$SCRIPTDIR/Essential-IO"
+
+PATCHDIR="$(Realpath "$(dirname "$0")"/../patches)"
 
 #-------------------------------------------------------------------------------
 function Require()
@@ -149,6 +154,7 @@ function ShowBuildOpts()
   done
   ShowVars \
     APPS \
+    BUILD_SOURCE_DOCUMENTATION \
     CLEAN \
     CLEANUP \
     CMAKE_CXX_STANDARD \
@@ -167,6 +173,7 @@ function ShowBuildOpts()
     TOOL_INFO \
     TOOL_VERS \
     TOOL_URL \
+    TOOL_PATCHES \
     BUILD_DIR \
     GENERATOR \
     NOINSTALL \
@@ -183,8 +190,8 @@ function ConfirmBuildOpts()
     printf "Confirm above options (Y/n)? "
     read -r REPLY
     case "${REPLY}" in
-      y) return 0 ;;
-      n) return 1 ;;
+      y|Y|yes) return 0 ;;
+      n|N|no) return 1 ;;
       *) REPLY=""; echo "Must reply with 'y' or 'n'" ;;
     esac
   done
@@ -233,7 +240,9 @@ function GetBuildOpts()
 #|  --install=DIR      |  -i DIR           | choose installation directory
 #|  --nogetbuildopts   |  -na              | don't automatically GetBuildOpts
 #|  --notreally        |  -n               | don't execute, just show possibilities
-#|  --no-install       |  -no-install      | 
+#|  --no-install       |  -no-install      | do not install
+#|  --no-patch         |  -no-patch        | do not patch 
+#|  --patch[=name]     |  -patch [name]    | apply patches
 #|  --src=DIR          |  -s DIR           | choose source directory
 #|  --std=N            |  -std=N           | set make C++ compiler version where N={98,11,14,17,20,...}
 #|  --systemc=DIR      |  -sc              | reference SystemC installation
@@ -269,6 +278,9 @@ function GetBuildOpts()
 #| - $SUFFIX
 #| - $TOOL_NAME
 #| - $TOOL_INFO
+#| - $TOOL_PATCHES
+#| - $TOOL_SRC
+#| - $TOOL_URL
 #| - $TOOL_VERS
 #| - $BUILD_DIR
 #| - $GENERATOR {cmake|autotools}
@@ -334,6 +346,10 @@ function GetBuildOpts()
       NOINSTALL="-n"
       shift
       ;;
+    -no-patch|--no-patch|--nopatch)
+      NOPATCH=1
+      shift
+      ;;
     --build-dir=*|-bd)
       if [[ "$1" != '-bd' ]]; then
         BUILD_DIR="${1//*=}"
@@ -384,6 +400,9 @@ function GetBuildOpts()
       APPS="${HOME}.local/apps"
       SRC="${HOME}/.local/src"
       shift
+      ;;
+    --doxy)
+      BUILD_SOURCE_DOCUMENTATION=on
       ;;
     --gcc)
       CC=gcc
@@ -449,6 +468,29 @@ function GetBuildOpts()
         Report_fatal "Need argument for $1"
       fi
       shift;
+      ;;
+    -patch|--patch=*)
+      PATCH=
+      if [[ "$1" != '-patch' ]]; then
+        PATCH="${1//*=}"
+      elif [[ $# -gt 1 && ! "$2" =~ ^- ]]; then
+        PATCH="$2"
+        shift
+      else
+        PATCH="${TOOL_SRC}"
+      fi
+      if [[ -n "${PATCH}" ]]; then
+        PATCH="${PATCHDIR}/${PATCH}"
+      fi
+      if [[ ! "${PATCH}" =~ [.]patch(es)?$ ]]; then
+        PATCH="${PATCH}.patches"
+      fi
+      if [[ -r "${PATCH}" ]]; then
+        TOOL_PATCHES="${PATCH}"
+      else
+        Report_fatal "Patch '${PATCH}' does not exist"
+      fi
+      shift
       ;;
     -s|--src=*)
       if [[ "$1" != '-s' ]]; then
@@ -541,6 +583,9 @@ function GetBuildOpts()
   if [[ -z "${BUILD_DIR}" ]]; then
     BUILD_DIR="build-${GENERATOR}-$(basename "${CC}")"
   fi
+  if [[ -z "${BUILD_SOURCE_DOCUMENTATION}" ]]; then
+    BUILD_SOURCE_DOCUMENTATION="off"
+  fi
 
   #-------------------------------------------------------------------------------
   # Test some assumptions
@@ -609,7 +654,7 @@ function Create_and_Cd()
   _do cd "${1}" || Report_fatal "Unable to enter ${1} directory"
 }
 
-# Download and enter directory
+# Download and enter directory and patch
 function GetSource_and_Cd()
 {
   Assert $# = 2
@@ -629,6 +674,9 @@ function GetSource_and_Cd()
   cd "${1}" || Report_fatal "Unable to enter ${1}"
   if [[ -n "${TOOL_VERS}" ]]; then
     _do git  checkout "${TOOL_VERS}"
+  fi
+  if [[ -n "${TOOL_PATCHES}" ]]; then
+    _do git  am --empty=drop "${TOOL_PATCHES}"
   fi
 }
 
@@ -658,7 +706,7 @@ function Configure_tool()
       _do cmake -B "${BUILD_DIR}"\
           -DCMAKE_INSTALL_PREFIX="${CMAKE_INSTALL_PREFIX}"\
           -DCMAKE_CXX_STANDARD="${CMAKE_CXX_STANDARD}"\
-          -DBUILD_SOURCE_DOCUMENTATION=on\
+          -DBUILD_SOURCE_DOCUMENTATION="${BUILD_SOURCE_DOCUMENTATION}"\
           "${APPLE}"
       ;;
     autotools)
