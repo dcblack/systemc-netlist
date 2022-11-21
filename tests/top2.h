@@ -10,14 +10,19 @@ using namespace std::literals;
 
 struct Dump_subscriber : sc_core::sc_object, tlm_analysis_if<std::string> {
   static constexpr const char *mesgType = "/Doulos Inc./SystemC-Example/Dump";
-  explicit Dump_subscriber( const char* nm ) : sc_object{nm} {}
+  explicit Dump_subscriber( const char* nm ) : sc_object{nm} {
+    SC_REPORT_INFO_VERB( mesgType, ("Contructed "s + name()).c_str(), SC_DEBUG );
+  }
   const char* kind() const override { return "tlm_analysis_subscriber"; }
-  void write( const std::string& t ) override { SC_REPORT_INFO( mesgType, ( "Dump: "s + t).c_str() ); }
+  void write( const std::string& t ) override { SC_REPORT_INFO_VERB( mesgType, ( "Dump: "s + t).c_str() , SC_DEBUG ); }
 };
 
 SC_MODULE( Empty_module )
 {
-  SC_CTOR( Empty_module ) {}
+  static constexpr const char *mesgType = "/Doulos Inc./SystemC-Example/Empty";
+  SC_CTOR( Empty_module ) {
+    SC_REPORT_INFO_VERB( mesgType, ("Contructed "s + name()).c_str() , SC_DEBUG );
+  }
 };
 
 SC_MODULE( Odd_module )
@@ -43,6 +48,7 @@ SC_MODULE( Odd_module )
   {
     SC_THREAD( hello2 );
     nameless_xport.bind( anonymous_channel );
+    SC_REPORT_INFO_VERB( mesgType, ("Contructed "s + name()).c_str() , SC_DEBUG);
   }
 
   void hello2()
@@ -50,7 +56,7 @@ SC_MODULE( Odd_module )
     wait( 1_us );
     auto message = "Hello2 @ "s + sc_time_stamp().to_string();
     debug_ap.write( message );
-    SC_REPORT_INFO( mesgType, message.c_str());
+    SC_REPORT_INFO( mesgType, message.c_str() );
   }
 };
 
@@ -72,7 +78,7 @@ SC_MODULE( Container_module ) {
     odd2.nameless_port.bind( odd1.nameless_xport );
     odd1.debug_ap.bind( dumper );
 //  odd2.anon_ap.bind( analysis );
-    SC_REPORT_INFO( mesgType, ("Contructed "s + name()).c_str() );
+    SC_REPORT_INFO_VERB( mesgType, ("Contructed "s + name()).c_str() , SC_DEBUG );
   }
 };
 
@@ -80,7 +86,7 @@ SC_MODULE( Top2_module ) {
   const char* mesgType = "/Doulos Inc./SystemC-Example/top2";
   Container_module container{ "container" };
   SC_CTOR( Top2_module ) {
-    SC_REPORT_INFO( mesgType, ("Contructed "s + name()).c_str() );
+    SC_REPORT_INFO_VERB( mesgType, ("Contructed "s + name()).c_str() , SC_DEBUG );
   }
 };
 
