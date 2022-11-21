@@ -81,26 +81,35 @@ namespace netList
     //TODO: Add more info about processes ???
 
     //-- ANALYSIS_PORTS ----------------------------------------------------------
-#ifdef SC_HAS_ANALYSIS_BASE
-    auto aport_base_ptr = dynamic_cast<tlm::tlm_analysis_port_base*>( obj_ptr );
-    if( aport_base_ptr != nullptr ) {
-      auto nConnections = aport_base_ptr->size();
-      if( nConnections == 0 ) {
-        result += " DISCONNECTED";
-      }
-      else {
-        for( auto i = 0 ; i < nConnections; ++i )
-        {
-          result += "\n"s + leader( depth + 1 );
-          result += "  ["s + std::to_string(i) + "] -> ";
-          auto intf = aport_base_ptr->get_base_interface(i);
-          auto subscriber = dynamic_cast<sc_object*>(intf);
-          if( subscriber != nullptr ) result += subscriber->name();
+    #ifdef SC_HAS_TLM_ANALYSIS_BASE
+      auto aport_base_ptr = dynamic_cast<tlm::tlm_analysis_port_base*>( obj_ptr );
+      if( aport_base_ptr != nullptr ) {
+        auto nConnections = aport_base_ptr->size();
+        if( nConnections == 0 ) {
+          result += " DISCONNECTED";
         }
+        else {
+          for( auto i = 0 ; i < nConnections; ++i )
+          {
+            result += "\n"s + leader( depth + 1 );
+            result += "  ["s + std::to_string(i) + "] -> ";
+            auto intf = aport_base_ptr->get_base_interface(i);
+            auto subscriber = dynamic_cast<sc_object*>(intf);
+            if( subscriber != nullptr ) result += subscriber->name();
+          }
+        }
+        return result;
       }
-      return result;
-    }
-#endif/*SC_HAS_ANALYSIS_BASE*/
+    #else
+      #if defined(__clang__) || \
+         (defined(__GNUC__) && ((__GNUC__ * 1000 + __GNUC_MINOR__) >= 4006))
+        #pragma GCC diagnostic push
+        #pragma GCC diagnostic ignored "-Wpedantic"
+        #pragma GCC diagnostic ignored "-W#warnings"
+        #warning "No SC_HAS_TLM_ANALYSIS_BASE"
+        #pragma GCC diagnostic pop
+      #endif
+    #endif/*SC_HAS_TLM_ANALYSIS_BASE*/
 
     //-- TLM_SOCKETS -------------------------------------------------------------
     auto socket_ptr = dynamic_cast<tlm::tlm_base_socket_if*>( obj_ptr );
@@ -149,13 +158,21 @@ namespace netList
               auto chan = dynamic_cast<sc_object*>(intf);
               if( chan != nullptr ) result += chan->name();
             } else {
-#ifdef SC_HAS_GET_BASE_INTERFACE
-              auto intf = port_base_ptr->get_base_interface(i);
-              auto chan = dynamic_cast<sc_object*>(intf);
-              if( chan != nullptr ) result += chan->name();
-#else/*!SC_HAS_GET_BASE_INTERFACE*/
-              result += "INDETERMINATE"s;
-#endif/*SC_HAS_GET_BASE_INTERFACE*/
+              #ifdef SC_HAS_GET_BASE_INTERFACE
+                auto intf = port_base_ptr->get_base_interface(i);
+                auto chan = dynamic_cast<sc_object*>(intf);
+                if( chan != nullptr ) result += chan->name();
+              #else/*!SC_HAS_GET_BASE_INTERFACE*/
+                #if defined(__clang__) || \
+                   (defined(__GNUC__) && ((__GNUC__ * 1000 + __GNUC_MINOR__) >= 4006))
+                  #pragma GCC diagnostic push
+                  #pragma GCC diagnostic ignored "-Wpedantic"
+                  #pragma GCC diagnostic ignored "-W#warnings"
+                  #warning "No SC_HAS_GET_BASE_INTERFACE"
+                  #pragma GCC diagnostic pop
+                #endif
+                result += "INDETERMINATE"s;
+              #endif/*SC_HAS_GET_BASE_INTERFACE*/
             }
           }
           break;
