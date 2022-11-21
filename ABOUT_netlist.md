@@ -74,6 +74,12 @@ cmake --build build/debug
 ctest --test-dir build/debug -V
 ```
 
+KNOWN ISSUES
+------------
+
+1. Some parts of this effort are still incomplete (e.g., tlm_analysis_port connectivity)
+2. There appears to be a mystery core dump issue wih macOs Apple Silicon (sometimes only works under lldb)
+
 REQUEST
 -------
 
