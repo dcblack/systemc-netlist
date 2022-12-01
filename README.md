@@ -23,4 +23,7 @@ Contents
 │   └── netlist.h
 └── tests/ -- a bunch of files to test the utility
 
+Warning
+-------
 
+Some aspects of this utility are experimental and conditionally dependent on changes to SystemC itself.
