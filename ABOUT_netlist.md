@@ -40,13 +40,14 @@ DIRECTORY LAYOUT
   └── tests/ -- test source code
 ```
 
+PATCHING SYSTEMC - OPTIONAL
+---------------------------
 
-PATCHING SYSTEMC
-----------------
+WARNING - This is experimental
 
 The SystemC patches should not break anything and are quite limited. At present, the patches have only been applied to the Accellera Official repository and compiled using the "experimental" cmake approach, which I find to be simpler and more stable. 
 
-Obtain a copy of my latest patches from <https://github.com/dcblack/systemc-patches.git>
+Obtain a copy of my latest experimental SystemC patches from <https://github.com/dcblack/systemc-patches.git>
 
 Here are the steps:
 
@@ -58,7 +59,8 @@ ${NETLIST_HOME}/bin/build-systemc
 2. Go to the `"${HOME}/.local/src"` directory and do the following:
 
 ```bash
-git am --empty=drop "${NETLIST_HOME}/netlist.patches"
+git clone https://github.com/dcblack/systemc-patches.git
+git am --empty=drop "systemc-patches/systemc.patches"
 cmake -B build
 cmake --build build
 cmake --install build
@@ -68,7 +70,7 @@ TESTING
 -------
 
 ```bash
-HERE=`pwd`
+cd NETLIST_PROJECT_TOP
 cmake -S . -B build/debug -DCMAKE_PREFIX_PATH=$HERE -DCMAKE_BUILD_TYPE=Debug
 cmake --build build/debug
 ctest --test-dir build/debug -V
